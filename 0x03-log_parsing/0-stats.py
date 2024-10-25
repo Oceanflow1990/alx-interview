@@ -1,47 +1,40 @@
 #!/usr/bin/python3
-"""
-Module that parses a log and prints stats to stdout
-"""
-from sys import stdin
+"""Module containing script that reads stdin and computes metrics"""
+import sys
 
-status_codes = {
-    "200": 0,
-    "301": 0,
-    "400": 0,
-    "401": 0,
-    "403": 0,
-    "404": 0,
-    "405": 0,
-    "500": 0
-}
+status_codes = {"200": 0, "301": 0, "400": 0, "401": 0,
+                "403": 0, "404": 0, "405": 0, "500": 0}
+total_size = 0
+total_num = 0
 
-size = 0
+try:
+    for line in sys.stdin:
+        lines = line.split(" ")
 
+        if len(lines) > 4:
+            code = lines[-2]
+            size = int(lines[-1])
 
-def print_stats():
-    """Prints the accumulated logs"""
-    print("File size: {}".format(size))
-    for status in sorted(status_codes.keys()):
-        if status_codes[status]:
-            print("{}: {}".format(status, status_codes[status]))
+            if code in status_codes.keys():
+                status_codes[code] += 1
 
+            total_size += size
+            total_num += 1
 
-if __name__ == "__main__":
-    count = 0
-    try:
-        for line in stdin:
-            try:
-                items = line.split()
-                size += int(items[-1])
-                if items[-2] in status_codes:
-                    status_codes[items[-2]] += 1
-            except:
-                pass
-            if count == 9:
-                print_stats()
-                count = -1
-            count += 1
-    except KeyboardInterrupt:
-        print_stats()
-        raise
-    print_stats()
+        if total_num == 10:
+            total_num = 0
+            print("File size: {}".format(total_size))
+
+            for k, v in sorted(status_codes.items()):
+                if v != 0:
+                    print("{}: {}".format(k, v))
+
+except Exception:
+    pass
+
+finally:
+    print("File size: {}".format(total_size))
+
+    for k, v in sorted(status_codes.items()):
+        if v != 0:
+            print("{}: {}".format(k, v))
